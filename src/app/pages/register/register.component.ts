@@ -6,6 +6,8 @@ import { UserService } from '../../core/service/user.service';
 import { Register } from '../../core/models/Register';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
+import {LoginResponse} from '../../core/models/LoginResponse';
+import {HttpErrorResponse} from '@angular/common/http';
 
 @Component({
   selector: 'app-register',
@@ -20,6 +22,7 @@ export class RegisterComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   registerForm: FormGroup = new FormGroup({});
   submitted: boolean = false;
+  errors: Array<String> = [];
 
   constructor(private router: Router) {}
 
@@ -39,6 +42,7 @@ export class RegisterComponent implements OnInit {
   }
 
   onSubmit(): void {
+    this.errors = [];
     this.submitted = true;
     if (this.registerForm.invalid) {
       return;
@@ -51,12 +55,15 @@ export class RegisterComponent implements OnInit {
     };
     this.userService.register(registerUser)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(
-      () => {
-        alert('SUCCESS!! :-)');
-        return this.router.navigate(['/login']);
-      },
-    );
+      .subscribe({
+        next: () => {
+          alert('SUCCESS!! :-)');
+          return this.router.navigate(['/login']);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.errors.push(error.error.message);
+        }
+      });
   }
 
   onReset(): void {
